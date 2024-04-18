@@ -249,31 +249,21 @@ Steps: 20, Sampler: Euler a, CFG scale: 7, Seed: 965400086, Size: 512x512, Model
 
     prompt = ""
     negative_prompt = ""
+    lastline = ""
 
-    done_with_prompt = False
+    lls = x.rsplit("\n", maxsplit=1)
+    if len(lls) > 1:
+        in_prompts = lls[0].strip()
+        lastline = lls[1].strip()
 
-    *lines, lastline = x.strip().split("\n")
-    if len(re_param.findall(lastline)) < 3:
-        lines.append(lastline)
-        lastline = ''
-
-    for line in lines:
-        line = line.strip()
-        if line.startswith("Negative prompt:"):
-            done_with_prompt = True
-            line = line[16:].strip()
-        if done_with_prompt:
-            negative_prompt += ("" if negative_prompt == "" else "\n") + line
-        else:
-            prompt += ("" if prompt == "" else "\n") + line
-
-    if shared.opts.infotext_styles != "Ignore":
-        found_styles, prompt, negative_prompt = shared.prompt_styles.extract_styles_from_prompt(prompt, negative_prompt)
-
-        if shared.opts.infotext_styles == "Apply":
-            res["Styles array"] = found_styles
-        elif shared.opts.infotext_styles == "Apply if any" and found_styles:
-            res["Styles array"] = found_styles
+        if len(in_prompts) > 1 and len(in_prompts) > 0:
+            params = x.rsplit('Negative prompt: ', maxsplit=1)
+            prompt = params[0].rsplit('\n', maxsplit=1)[0].strip()
+            if len(params) > 1:
+                npf = params[1].rsplit('\n', maxsplit=1)
+                negative_prompt = npf[0].strip()
+    else:
+        lastline = lls[0].strip()
 
     res["Prompt"] = prompt
     res["Negative prompt"] = negative_prompt
